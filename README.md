@@ -30,6 +30,7 @@ code-os/
 ├── practice/                # Problem solving logs
 │   ├── patterns/
 │   ├── company-specific/
+│   └── leetcode/
 │   └── reflections/
 ├── projects/                # Real applications, tools, experiments
 │   └── ...                  # Full-stack, libraries, side ideas
