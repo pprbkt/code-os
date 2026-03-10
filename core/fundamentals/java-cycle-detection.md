@@ -1,0 +1,525 @@
+# Cycle Detection
+
+Cycle detection is the process of identifying whether a data structure contains a cycle (a path that loops back to a previously visited node). The most common algorithm is Floyd's Cycle Detection Algorithm, also known as the tortoise and hare algorithm.
+
+## What is a Cycle?
+
+A cycle exists when following the path from a node eventually leads back to a previously visited node.
+
+```
+No Cycle:  1 → 2 → 3 → 4 → null
+
+Has Cycle: 1 → 2 → 3 → 4
+               ↑       ↓
+               6 ← 5 ←
+```
+
+## Key Characteristics
+
+- **Time Complexity**: O(n)
+- **Space Complexity**: O(1) with two pointers, O(n) with hash set
+- **Primary Method**: Floyd's Cycle Detection (fast and slow pointers)
+- **Applications**: Linked lists, graphs, sequences
+
+## Floyd's Cycle Detection Algorithm
+
+Uses two pointers moving at different speeds. If there is a cycle, they will eventually meet.
+
+```java
+public class CycleDetection {
+    
+    public static boolean hasCycle(ListNode head) {
+        if (head == null || head.next == null) {
+            return false;
+        }
+        
+        ListNode slow = head;
+        ListNode fast = head;
+        
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+            
+            if (slow == fast) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+}
+```
+
+## Why Floyd's Algorithm Works
+
+**If No Cycle:**
+
+Fast pointer reaches the end (null) before meeting slow pointer.
+
+**If Cycle Exists:**
+
+Fast pointer will eventually catch up to slow pointer inside the cycle. Since fast moves 2 steps and slow moves 1 step, the distance between them decreases by 1 each iteration, guaranteeing they will meet.
+
+## Finding Cycle Start Node
+
+Once a cycle is detected, find where the cycle begins.
+
+```java
+public class FindCycleStart {
+    
+    public static ListNode detectCycle(ListNode head) {
+        if (head == null || head.next == null) {
+            return null;
+        }
+        
+        ListNode slow = head;
+        ListNode fast = head;
+        
+        // Phase 1: Detect cycle
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+            
+            if (slow == fast) {
+                // Phase 2: Find start
+                slow = head;
+                while (slow != fast) {
+                    slow = slow.next;
+                    fast = fast.next;
+                }
+                return slow;
+            }
+        }
+        
+        return null;
+    }
+}
+```
+
+**Mathematical Proof:**
+
+Let:
+- x = distance from head to cycle start
+- y = distance from cycle start to meeting point
+- z = distance from meeting point back to cycle start
+- C = cycle length = y + z
+
+When they meet:
+- Slow traveled: x + y
+- Fast traveled: x + y + kC (where k ≥ 1)
+
+Since fast travels twice as fast:
+- 2(x + y) = x + y + kC
+- x + y = kC
+- x = kC - y
+- x = k(y + z) - y
+- x = (k-1)C + z
+
+This means: distance from head to start = distance from meeting point to start (plus some complete cycles).
+
+## Finding Cycle Length
+
+Determine the length of the cycle.
+
+```java
+public class CycleLength {
+    
+    public static int cycleLength(ListNode head) {
+        if (head == null || head.next == null) {
+            return 0;
+        }
+        
+        ListNode slow = head;
+        ListNode fast = head;
+        
+        // Detect cycle
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+            
+            if (slow == fast) {
+                // Count cycle length
+                int length = 0;
+                do {
+                    slow = slow.next;
+                    length++;
+                } while (slow != fast);
+                
+                return length;
+            }
+        }
+        
+        return 0;
+    }
+}
+```
+
+## Hash Set Approach
+
+Alternative approach using extra space.
+
+```java
+public class CycleDetectionHashSet {
+    
+    public static boolean hasCycle(ListNode head) {
+        Set<ListNode> visited = new HashSet<>();
+        
+        ListNode curr = head;
+        while (curr != null) {
+            if (visited.contains(curr)) {
+                return true;
+            }
+            visited.add(curr);
+            curr = curr.next;
+        }
+        
+        return false;
+    }
+    
+    public static ListNode detectCycle(ListNode head) {
+        Set<ListNode> visited = new HashSet<>();
+        
+        ListNode curr = head;
+        while (curr != null) {
+            if (visited.contains(curr)) {
+                return curr;
+            }
+            visited.add(curr);
+            curr = curr.next;
+        }
+        
+        return null;
+    }
+}
+```
+
+**Trade-off:**
+
+- Time: O(n)
+- Space: O(n)
+- Simpler to understand but uses extra memory
+
+## Cycle Detection in Arrays
+
+Detect cycles in sequences generated by array indices.
+
+```java
+public class ArrayCycleDetection {
+    
+    // Find duplicate number (values 1 to n in array of size n+1)
+    public static int findDuplicate(int[] nums) {
+        int slow = nums[0];
+        int fast = nums[0];
+        
+        // Detect cycle
+        do {
+            slow = nums[slow];
+            fast = nums[nums[fast]];
+        } while (slow != fast);
+        
+        // Find cycle start
+        slow = nums[0];
+        while (slow != fast) {
+            slow = nums[slow];
+            fast = nums[fast];
+        }
+        
+        return slow;
+    }
+}
+```
+
+**Key Insight:**
+
+Treat array as implicit linked list where nums[i] points to index nums[i]. A duplicate creates a cycle.
+
+## Circular Array Loop Detection
+
+Detect cycles in circular arrays with direction constraints.
+
+```java
+public class CircularArrayLoop {
+    
+    public static boolean circularArrayLoop(int[] nums) {
+        int n = nums.length;
+        
+        for (int i = 0; i < n; i++) {
+            if (nums[i] == 0) continue;
+            
+            int slow = i;
+            int fast = i;
+            boolean forward = nums[i] > 0;
+            
+            while (true) {
+                // Move slow one step
+                slow = getNext(nums, slow);
+                if (slow == -1 || (nums[slow] > 0) != forward) {
+                    break;
+                }
+                
+                // Move fast two steps
+                fast = getNext(nums, fast);
+                if (fast == -1 || (nums[fast] > 0) != forward) {
+                    break;
+                }
+                fast = getNext(nums, fast);
+                if (fast == -1 || (nums[fast] > 0) != forward) {
+                    break;
+                }
+                
+                if (slow == fast) {
+                    // Check if cycle length > 1
+                    if (slow == getNext(nums, slow)) {
+                        break;
+                    }
+                    return true;
+                }
+            }
+            
+            // Mark as visited
+            slow = i;
+            int val = nums[i];
+            while (nums[slow] * val > 0) {
+                int next = getNext(nums, slow);
+                nums[slow] = 0;
+                slow = next;
+            }
+        }
+        
+        return false;
+    }
+    
+    private static int getNext(int[] nums, int i) {
+        int n = nums.length;
+        int next = (i + nums[i]) % n;
+        if (next < 0) next += n;
+        return next == i ? -1 : next;
+    }
+}
+```
+
+## Happy Number (Cycle in Sequence)
+
+Determine if a number is happy using cycle detection.
+
+```java
+public class HappyNumber {
+    
+    public static boolean isHappy(int n) {
+        int slow = n;
+        int fast = n;
+        
+        do {
+            slow = sumOfSquares(slow);
+            fast = sumOfSquares(sumOfSquares(fast));
+        } while (slow != fast);
+        
+        return slow == 1;
+    }
+    
+    private static int sumOfSquares(int n) {
+        int sum = 0;
+        while (n > 0) {
+            int digit = n % 10;
+            sum += digit * digit;
+            n /= 10;
+        }
+        return sum;
+    }
+}
+```
+
+## Graph Cycle Detection (DFS)
+
+Detect cycles in directed graphs using depth-first search.
+
+```java
+public class GraphCycleDetection {
+    
+    public static boolean hasCycle(List<List<Integer>> graph) {
+        int n = graph.size();
+        int[] state = new int[n]; // 0: unvisited, 1: visiting, 2: visited
+        
+        for (int i = 0; i < n; i++) {
+            if (state[i] == 0) {
+                if (hasCycleDFS(graph, i, state)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    private static boolean hasCycleDFS(List<List<Integer>> graph, 
+                                       int node, int[] state) {
+        state[node] = 1; // Mark as visiting
+        
+        for (int neighbor : graph.get(node)) {
+            if (state[neighbor] == 1) {
+                // Back edge found (cycle)
+                return true;
+            }
+            if (state[neighbor] == 0) {
+                if (hasCycleDFS(graph, neighbor, state)) {
+                    return true;
+                }
+            }
+        }
+        
+        state[node] = 2; // Mark as visited
+        return false;
+    }
+}
+```
+
+## Undirected Graph Cycle Detection (Union-Find)
+
+Detect cycles in undirected graphs using union-find.
+
+```java
+public class UnionFind {
+    private int[] parent;
+    private int[] rank;
+    
+    public UnionFind(int n) {
+        parent = new int[n];
+        rank = new int[n];
+        for (int i = 0; i < n; i++) {
+            parent[i] = i;
+        }
+    }
+    
+    public int find(int x) {
+        if (parent[x] != x) {
+            parent[x] = find(parent[x]);
+        }
+        return parent[x];
+    }
+    
+    public boolean union(int x, int y) {
+        int rootX = find(x);
+        int rootY = find(y);
+        
+        if (rootX == rootY) {
+            return false; // Cycle detected
+        }
+        
+        if (rank[rootX] < rank[rootY]) {
+            parent[rootX] = rootY;
+        } else if (rank[rootX] > rank[rootY]) {
+            parent[rootY] = rootX;
+        } else {
+            parent[rootY] = rootX;
+            rank[rootX]++;
+        }
+        
+        return true;
+    }
+    
+    public static boolean hasCycle(int n, int[][] edges) {
+        UnionFind uf = new UnionFind(n);
+        
+        for (int[] edge : edges) {
+            if (!uf.union(edge[0], edge[1])) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+}
+```
+
+## Comparison of Methods
+
+**Floyd's Algorithm (Two Pointers)**
+
+- Time: O(n)
+- Space: O(1)
+- Best for: Linked lists, sequences
+- Detection only or find start
+
+**Hash Set**
+
+- Time: O(n)
+- Space: O(n)
+- Best for: Simple detection
+- Easy to implement
+
+**DFS (Directed Graph)**
+
+- Time: O(V + E)
+- Space: O(V)
+- Best for: Graph structures
+- Detects all cycles
+
+**Union-Find (Undirected Graph)**
+
+- Time: O(E α(V)) where α is inverse Ackermann
+- Space: O(V)
+- Best for: Undirected graphs
+- Efficient with path compression
+
+## Common Patterns
+
+**Pattern 1: Basic Detection**
+
+```java
+ListNode slow = head;
+ListNode fast = head;
+
+while (fast != null && fast.next != null) {
+    slow = slow.next;
+    fast = fast.next.next;
+    
+    if (slow == fast) {
+        return true; // Cycle detected
+    }
+}
+
+return false; // No cycle
+```
+
+**Pattern 2: Find Cycle Start**
+
+```java
+// First detect cycle
+while (fast != null && fast.next != null) {
+    slow = slow.next;
+    fast = fast.next.next;
+    if (slow == fast) break;
+}
+
+if (fast == null || fast.next == null) {
+    return null; // No cycle
+}
+
+// Reset slow to head
+slow = head;
+while (slow != fast) {
+    slow = slow.next;
+    fast = fast.next;
+}
+
+return slow; // Cycle start
+```
+
+## Common Pitfalls
+
+**Not Checking Null Pointers**
+
+Always check `fast != null && fast.next != null`.
+
+**Wrong Meeting Point Logic**
+
+Use do-while for some problems, while for others.
+
+**Forgetting to Reset Pointer**
+
+When finding cycle start, reset slow to head.
+
+**Incorrect Graph State Tracking**
+
+For DFS, track three states: unvisited, visiting, visited.
+
