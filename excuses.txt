@@ -23,3 +23,6 @@
 
 - 8 March 2026
     Didn't do shit
+
+- 12 March 2026
+    Revised binary search problems
