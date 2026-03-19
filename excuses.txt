@@ -26,3 +26,6 @@
 
 - 12 March 2026
     Revised binary search problems
+
+- 19 March 2026
+    Revised stack problems
